@@ -33,10 +33,41 @@ Access to the classes from the meas_extensions_simpleShape library
 %{
 #include "lsst/pex/logging.h"
 #include "lsst/meas/algorithms.h"
+#include "lsst/meas/extensions/simpleShape.h"
+
+#define PY_ARRAY_UNIQUE_SYMBOL LSST_MEAS_EXT_SIMPLESHAPE_NUMPY_ARRAY_API
+#include "numpy/arrayobject.h"
+#include "ndarray/swig.h"
+#include "ndarray/swig/eigen.h"
+%}
+
+%init %{
+    import_array();
 %}
 
 %include "lsst/p_lsstSwig.i"
 
 %lsst_exceptions();
 
+%include "ndarray.i"
+
+%declareNumPyConverters(Eigen::Matrix<double,5,5>)
+
 %import "lsst/meas/algorithms/algorithmsLib.i"
+
+%shared_ptr(lsst::meas::extensions::simpleShape::SimpleShapeControl);
+%shared_ptr(lsst::meas::extensions::simpleShape::SimpleShape);
+
+%include "lsst/meas/extensions/simpleShape.h"
+
+%extend lsst::meas::extensions::simpleShape::SimpleShape {
+// add class-scope typedefs as typeobject class attributes, just
+// to make C++ and Python interfaces more similar
+%pythoncode %{
+    Control = SimpleShapeControl
+    Result = SimpleShapeResult
+%}
+}
+
+%template(measure) lsst::meas::extensions::simpleShape::SimpleShape::measure<float>;
+%template(measure) lsst::meas::extensions::simpleShape::SimpleShape::measure<double>;
