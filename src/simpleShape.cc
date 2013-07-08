@@ -85,7 +85,7 @@ void SimpleShape::_apply(
     algorithms::ImageMoments moments(ctrl.nSigmaRegion, ctrl.useApproximateExp);
     algorithms::ImageMoments::EllipseResult result = moments.measureEllipse(
         exposure.getMaskedImage(),
-        afw::geom::ellipses::Axes(ctrl.sigma),
+        afw::geom::ellipses::Axes(ctrl.sigma, ctrl.sigma),
         center
     );
     source.set(this->getKeys().meas, result.getQuadrupole());
