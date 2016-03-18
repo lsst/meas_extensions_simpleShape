@@ -24,6 +24,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/ellipses/PixelRegion.h"
 #include "lsst/meas/extensions/simpleShape.h"
+#include "lsst/afw/math.h"
 
 namespace lsst { namespace meas { namespace extensions { namespace simpleShape {
 
@@ -146,7 +147,7 @@ private:
 } // anonymous
 
 template <typename T>
-SimpleShape::Result SimpleShape::measure(
+SimpleShapeResult SimpleShape::computeMoments(
     afw::geom::ellipses::Ellipse const & weight,
     afw::image::MaskedImage<T> const & image,
     double nSigmaRegion
@@ -155,7 +156,7 @@ SimpleShape::Result SimpleShape::measure(
     afw::geom::ellipses::Ellipse regionEllipse(weight);
     regionEllipse.getCore().scale(nSigmaRegion);
     afw::geom::ellipses::PixelRegion region(regionEllipse);
-    Result result;
+    SimpleShapeResult result;
 
     // We work in the coordinate system where the origin is the center of the weight function.
     // This will make things easier in the various transformations we'll have to apply to the raw
@@ -229,13 +230,13 @@ MatrixM SimpleShape::correctWeightedMoments(
     Eigen::Matrix2d mMat = ellipse.getMatrix();
     if (wMat.determinant() <= 0.0) {
         throw LSST_EXCEPT(
-            pex::exceptions::RuntimeErrorException,
+            pex::exceptions::RuntimeError,
             "Weight moments matrix is singular"
         );
     }
     if (mMat.determinant() <= 0.0) {
         throw LSST_EXCEPT(
-            pex::exceptions::RuntimeErrorException,
+            pex::exceptions::RuntimeError,
             "Measured moments matrix is singular"
         );
     }
@@ -243,14 +244,14 @@ MatrixM SimpleShape::correctWeightedMoments(
     Eigen::Matrix2d cInv = mInv - wMat.inverse();
     if (cInv.determinant() <= 0.0) {
         throw LSST_EXCEPT(
-            pex::exceptions::RuntimeErrorException,
+            pex::exceptions::RuntimeError,
             "Corrected moments matrix is singular"
         );
     }
     Eigen::Matrix2d cMat = cInv.inverse();
-    ellipse.setIxx(cMat(0,0));
-    ellipse.setIyy(cMat(1,1));
-    ellipse.setIxy(cMat(0,1));
+    ellipse.setIxx(cMat(0, 0));
+    ellipse.setIyy(cMat(1, 1));
+    ellipse.setIxy(cMat(0, 1));
     Eigen::Matrix2d cMat_mInv = cMat * mInv;
     Eigen::Vector2d mInv_mVec = mInv * mVec;
     Eigen::Vector2d cVec = cMat_mInv * mVec;
@@ -292,61 +293,114 @@ MatrixM SimpleShape::correctWeightedMoments(
 }
 
 
-/* ---- Schema definition and pluggable algorithm framework boilerplate --------------------------------------
- *
- * The rest of this file involves meeting the requirements of the pluggable algorithm framework:
- *
- *  - Construction via the control object's makeAlgorithm method and the algorithm constructor
- *
- *  - Registration of the Schema fields the algorithm will fill, while saving the Key objects
- *    that will be used to refer to those fields later.  Most of this is done by the ShapeAlgorithm
- *    base class constructor, but we optionally also allocate fields to save a centroid.
- *
- *  - Calling the algorithmic code in measure() from the all-important _apply() member function
- *
- *  - Instantiating templates via the LSST_MEAS_ALGORITHM_PRIVATE_IMPLEMENTATION macro
- */
-
-SimpleShape::SimpleShape(SimpleShapeControl const & ctrl, afw::table::Schema & schema) :
-    algorithms::ShapeAlgorithm(ctrl, schema, "shape measured with fixed (non-adaptive) Gaussian weight"),
-    _centroidKeys(
-        addCentroidFields( // addCentroidFields is in afw::table, via Koenig lookup on schema
-            schema, ctrl.name + ".centroid", "centroid measured with fixed circular Gaussian weight"
-        )
-    )
+SimpleShapeResult::SimpleShapeResult() : ellipse(std::numeric_limits<lsst::meas::base::ErrElement>::quiet_NaN(),
+                                     std::numeric_limits<lsst::meas::base::ErrElement>::quiet_NaN(),
+                                     std::numeric_limits<lsst::meas::base::ErrElement>::quiet_NaN()),
+                             center(std::numeric_limits<lsst::meas::base::ErrElement>::quiet_NaN(),
+                                    std::numeric_limits<lsst::meas::base::ErrElement>::quiet_NaN()),
+                             covariance(Eigen::Matrix<double,5,5>::Constant(std::numeric_limits<lsst::meas::base::ErrElement>::quiet_NaN()))
 {}
 
-template<typename PixelT>
-void SimpleShape::_apply(
+static boost::array<lsst::meas::base::FlagDefinition, SimpleShape::N_FLAGS> const flagDefs = {{
+    {"flag", "general failure flag, set if anything went wrong"}
+}};
+
+SimpleShapeResultKey SimpleShapeResultKey::addFields(
+        afw::table::Schema & schema,
+        std::string const & name
+) {
+            SimpleShapeResultKey r;
+            r._shapeResult = lsst::afw::table::QuadrupoleKey::addFields(schema,
+                                                            name, "elliptical Gaussian moments");
+            r._centroidResult = lsst::afw::table::Point2DKey::addFields(schema,
+                                                            name, "elliptical Gaussian moments", "pixels");
+            r._uncertantyResult = lsst::afw::table::CovarianceMatrixKey<double, 5>::addFields(schema,name, 
+                                                            std::vector<std::string> ({"Ixx", "Iyy", "Ixy",
+                                                                                      "Ix", "Iy"}), "pixels");
+            r._flagHandler = lsst::meas::base::FlagHandler::addFields(schema,
+                                                            name, flagDefs.begin(), flagDefs.end());
+            return r;
+}
+
+SimpleShapeResultKey::SimpleShapeResultKey(lsst::afw::table::SubSchema const & s) :
+    _shapeResult(s),
+    _centroidResult(s),
+    _uncertantyResult(s, std::vector<std::string> ({"Ixx", "Iyy", "Ixy", "Ix", "Iy"})),
+    _flagHandler(s, flagDefs.begin(), flagDefs.end())
+{}
+
+SimpleShapeResult SimpleShapeResultKey::get(lsst::afw::table::BaseRecord const & record) const {
+    SimpleShapeResult result;
+    result.ellipse = record.get(_shapeResult);
+    result.center = record.get(_centroidResult);
+    result.covariance = record.get(_uncertantyResult);
+    for (int n = 0; n < SimpleShape::N_FLAGS; ++n) {
+        result.flags[n] = _flagHandler.getValue(record, n);
+    }
+    return result;
+}
+
+void SimpleShapeResultKey::set(afw::table::BaseRecord & record, SimpleShapeResult const & value) const {
+    record.set(_shapeResult, value.ellipse);
+    record.set(_centroidResult, value.center);
+    record.set(_uncertantyResult, value.covariance);
+    for (int n = 0; n < SimpleShape::N_FLAGS; ++n) {
+        _flagHandler.setValue(record, n, value.flags[n]);
+    }
+}
+
+bool SimpleShapeResultKey::operator==(SimpleShapeResultKey const & other) const {
+    return _shapeResult == other._shapeResult &&
+        _centroidResult == other._centroidResult &&
+        _uncertantyResult == other._uncertantyResult;
+    //don't bother with flags - if we've gotten this far, it's basically impossible the flags don't match
+}
+
+bool SimpleShapeResultKey::isValid() const {
+    return _shapeResult.isValid() &&
+        _centroidResult.isValid() &&
+        _uncertantyResult.isValid();
+    //don't bother with flags - if we've gotten this far, it's basically impossible the flags don't match
+}
+
+
+SimpleShape::SimpleShape(
+        Control const & ctrl,
+        std::string const & name,
+        afw::table::Schema & schema
+    )
+    : _ctrl(ctrl),
+      _resultKey(SimpleShapeResultKey::addFields(schema, name)),
+      _centroidExtractor(schema, name)
+    {}
+
+void SimpleShape::measure(
     afw::table::SourceRecord & source,
-    afw::image::Exposure<PixelT> const & exposure,
-    afw::geom::Point2D const & center
+    afw::image::Exposure<float> const & exposure
 ) const {
-    SimpleShapeControl const & ctrl = static_cast<SimpleShapeControl const &>(this->getControl());
+    afw::geom::Point2D center = _centroidExtractor(source, _resultKey.getFlagHandler());
+    afw::geom::ellipses::Ellipse weight(afw::geom::ellipses::Axes(_ctrl.sigma), center);
     // set flags so an exception throw produces a flagged source
-    source.set(this->getKeys().flag, true);
-    source.set(_centroidKeys.flag, true);
-    afw::geom::ellipses::Ellipse weight(afw::geom::ellipses::Axes(ctrl.sigma), center);
-    Result result = measure(weight, exposure.getMaskedImage(), ctrl.nSigmaRegion);
-    source.set(this->getKeys().meas, result.ellipse);
-    source.set(this->getKeys().err, result.covariance.block<3,3>(0,0));
-    source.set(this->getKeys().flag, false);
-    source.set(_centroidKeys.meas, result.center);
-    source.set(_centroidKeys.err, result.covariance.block<2,2>(3,3));
-    source.set(_centroidKeys.flag, false);
+    SimpleShapeResult result = computeMoments(weight, exposure.getMaskedImage(), _ctrl.nSigmaRegion);
+    source.set(_resultKey, result);
 }
 
-PTR(algorithms::AlgorithmControl) SimpleShapeControl::_clone() const {
-    return boost::make_shared<SimpleShapeControl>(*this);
-}
-
-PTR(algorithms::Algorithm) SimpleShapeControl::_makeAlgorithm(
-    afw::table::Schema & schema,
-    PTR(daf::base::PropertyList) const &
+void SimpleShape::fail(
+        afw::table::SourceRecord & measRecord,
+        lsst::meas::base::MeasurementError * error
 ) const {
-    return boost::make_shared<SimpleShape>(*this, boost::ref(schema));
+    _resultKey.getFlagHandler().handleFailure(measRecord, error);
 }
 
-LSST_MEAS_ALGORITHM_PRIVATE_IMPLEMENTATION(SimpleShape);
+#define INSTANTIATE_IMAGE(IMAGE) \
+    template SimpleShapeResult SimpleShape::computeMoments(\
+        afw::geom::ellipses::Ellipse const &,              \
+        IMAGE const &,                                     \
+        double                                             \
+    )
+
+INSTANTIATE_IMAGE(lsst::afw::image::MaskedImage<int>);
+INSTANTIATE_IMAGE(lsst::afw::image::MaskedImage<float>);
+INSTANTIATE_IMAGE(lsst::afw::image::MaskedImage<double>);
 
 }}}} // namespace lsst::meas::extensions::simpleShape
