@@ -23,7 +23,6 @@
 
 import unittest
 import numpy
-import os
 
 import lsst.utils.tests
 import lsst.afw.geom
@@ -53,20 +52,36 @@ class SimpleShapeTestCase(lsst.utils.tests.TestCase):
             )
 
     def evaluateGaussian(self, ellipse):
+        '''
+        Create an elliptical Guassian as a Numpy array. Does not normalize the Gaussian
+        '''
         gt = ellipse.getGridTransform()
         xt = gt[gt.XX] * self.xg + gt[gt.XY] * self.yg + gt[gt.X]
         yt = gt[gt.YX] * self.xg + gt[gt.YY] * self.yg + gt[gt.Y]
         return numpy.exp(-0.5 * (xt**2 + yt**2))
 
-    def checkMoments(self, dEllipseCore, dCenter, wEllipseCore, wCenter):
+    def buildImageAndMoments(self, dEllipseCore, dCenter, wEllipseCore, wCenter):
+        '''
+        Generates a elliptical Gaussian image from input ellipse (dEllipse)
+        and uses an elliptical Gaussian (wEllipse) to calculate the shape
+        of the generated image.
+        '''
         dEllipse = el.Ellipse(dEllipseCore, dCenter)
         image = lsst.afw.image.MaskedImageF(self.bbox)
         image.getImage().getArray()[:,:] = self.evaluateGaussian(dEllipse)
         wEllipse = el.Ellipse(wEllipseCore, wCenter)
-        result = SimpleShape.measure(wEllipse, image)
+        result = SimpleShape.computeMoments(wEllipse, image)
         return result
 
     def testCorrectWeightedMoments(self):
+        '''
+        Test that the measured moments can be corrected for the fact that the measurement
+        contains information on the moments of the weight function used to make the 
+        measurement. The results should only contain the objects shape and not the moments
+        used to make the measurement. This is a subset of the functionality in testNoNoiseGaussians.
+        Because the other test tests a broader scope, it is useful to have this test happen under
+        more restrictive conditions.
+        '''
         for dEllipseCore in self.ellipseCores:
             for dCenter in self.centers:
                 dEllipse = el.Ellipse(dEllipseCore, dCenter)
@@ -90,9 +105,12 @@ class SimpleShapeTestCase(lsst.utils.tests.TestCase):
                                          rtol=1E-8, atol=1E-11)
 
     def testNoNoiseGaussians(self):
+        '''
+        Test that shape moments can be actuately determined for Gaussian images with no noise
+        '''
         for ellipseCore in self.ellipseCores:
             for center in self.centers:
-                result = self.checkMoments(ellipseCore, center, ellipseCore, center)
+                result = self.buildImageAndMoments(ellipseCore, center, ellipseCore, center)
                 self.assertClose(result.ellipse.getParameterVector(),
                                  ellipseCore.getParameterVector(),
                                  rtol=3E-3, atol=1E-15)

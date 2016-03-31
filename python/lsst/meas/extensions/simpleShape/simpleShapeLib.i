@@ -32,7 +32,10 @@ Access to the classes from the meas_extensions_simpleShape library
 
 %{
 #include "lsst/pex/logging.h"
-#include "lsst/meas/algorithms.h"
+#include "lsst/meas/base.h"
+#include "lsst/afw/math.h"
+#include "lsst/afw/math/FunctionLibrary.h"
+#include "lsst/afw/detection.h"
 #include "lsst/meas/extensions/simpleShape.h"
 
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_MEAS_EXT_SIMPLESHAPE_NUMPY_ARRAY_API
@@ -53,7 +56,7 @@ Access to the classes from the meas_extensions_simpleShape library
 
 %declareNumPyConverters(Eigen::Matrix<double,5,5>)
 
-%import "lsst/meas/algorithms/algorithmsLib.i"
+%import "lsst/meas/base/baseLib.i"
 
 %shared_ptr(lsst::meas::extensions::simpleShape::SimpleShapeControl);
 %shared_ptr(lsst::meas::extensions::simpleShape::SimpleShape);
@@ -65,9 +68,8 @@ Access to the classes from the meas_extensions_simpleShape library
 // to make C++ and Python interfaces more similar
 %pythoncode %{
     Control = SimpleShapeControl
-    Result = SimpleShapeResult
 %}
 }
 
-%template(measure) lsst::meas::extensions::simpleShape::SimpleShape::measure<float>;
-%template(measure) lsst::meas::extensions::simpleShape::SimpleShape::measure<double>;
+%template(computeMoments) lsst::meas::extensions::simpleShape::SimpleShape::computeMoments<float>;
+%template(computeMoments) lsst::meas::extensions::simpleShape::SimpleShape::computeMoments<double>;

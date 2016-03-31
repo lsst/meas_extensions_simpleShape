@@ -23,47 +23,98 @@
 #ifndef LSST_MEAS_EXTENSIONS_simpleShape_h_INCLUDED
 #define LSST_MEAS_EXTENSIONS_simpleShape_h_INCLUDED
 
+#include <bitset>
+
 #include "lsst/pex/config.h"
 #include "lsst/afw/geom/ellipses.h"
-#include "lsst/meas/algorithms/ShapeControl.h"
+#include "lsst/afw/table.h"
+#include "lsst/afw/image.h"
+#include "lsst/meas/base/Algorithm.h"
+#include "lsst/meas/base.h"
 
 namespace lsst { namespace meas { namespace extensions { namespace simpleShape {
 
-class SimpleShapeControl : public algorithms::ShapeControl {
-public:
+class SimpleShapeResult;
 
+/**
+ *  @brief A C++ control class to handle SdssShapeAlgorithm's configuration
+ *
+ */
+class SimpleShapeControl {
+ public:
     LSST_CONTROL_FIELD(sigma, double, "Sigma of circular Gaussian used as weight function, in pixels");
     LSST_CONTROL_FIELD(nSigmaRegion, double, "Maximum radius for pixels to include, in units of sigma");
 
-    SimpleShapeControl() :
-        algorithms::ShapeControl("shape.simple"), sigma(1.5), nSigmaRegion(3) {}
-
-private:
-    virtual PTR(algorithms::AlgorithmControl) _clone() const;
-    virtual PTR(algorithms::Algorithm) _makeAlgorithm(
-        afw::table::Schema & schema, PTR(daf::base::PropertyList) const & metadata
-    ) const;
+    SimpleShapeControl() : sigma(1.5), nSigmaRegion(3) {}
 };
 
-/**
- *  Struct to hold the results of SimpleShape when we don't run it as a plugin.
- */
-struct SimpleShapeResult {
-    afw::geom::ellipses::Quadrupole ellipse; ///< Measured second moments.
-    afw::geom::Point2D center; ///< Measured first moments, or the input center if !recentroid
-    Eigen::Matrix<double,5,5> covariance; ///< Matrix of uncertainties; ordered Ixx, Iyy, Ixy, Ix, Iy.
+class SimpleShapeResultKey : public afw::table::FunctorKey<SimpleShapeResult> {
+ public:
+    static SimpleShapeResultKey addFields(
+            afw::table::Schema & schema,
+            std::string const & name
+    );
+
+    // Default constructor
+    SimpleShapeResultKey() {}
+
+     /**
+     *  @brief Construct from a subschema, assuming _xx, _yy, etc. subfields
+     *
+     *  If a schema has "a_xx", "a_yy", etc. fields, this constructor allows you to construct
+     *  a SimpleShapeResultKey via:
+     *  @code
+     *  SimpleShapeResultKey k(schema["a"]);
+     *  @endcode
+     */
+    SimpleShapeResultKey(lsst::afw::table::SubSchema const & s);
+
+    virtual SimpleShapeResult get(afw::table::BaseRecord  const & record) const;
+    virtual void set(afw::table::BaseRecord & record, SimpleShapeResult const & value) const;
+
+    //@{
+    /// Compare the FunctorKey for equality with another, using the underlying Keys
+    bool operator==(SimpleShapeResultKey const & other) const;
+    bool operator!=(SimpleShapeResultKey const & other) const { return !(*this == other); }
+    //@}
+
+    /// Return True if the key is valid
+    bool isValid() const;
+
+    lsst::meas::base::FlagHandler const & getFlagHandler() const { return _flagHandler; }
+
+ private:
+    lsst::afw::table::QuadrupoleKey _shapeResult;
+    lsst::afw::table::Point2DKey _centroidResult;
+    lsst::afw::table::CovarianceMatrixKey<double, 5 > _uncertantyResult;
+    lsst::meas::base::FlagHandler _flagHandler;
 };
 
-class SimpleShape : public algorithms::ShapeAlgorithm {
-public:
+
+class SimpleShape : public lsst::meas::base::SimpleAlgorithm {
+ public:
 
     typedef SimpleShapeControl Control;
-    typedef SimpleShapeResult Result;
 
-    SimpleShape(SimpleShapeControl const & ctrl, afw::table::Schema & schema);
+     enum {
+        FAILURE=lsst::meas::base::FlagHandler::FAILURE,
+        N_FLAGS
+     };
 
+    SimpleShape(Control const & ctrl, std::string const & name, afw::table::Schema & schema);
+
+    /**
+     * Compute the Gaussian-weighted moments of an image.
+     *
+     * @param[in] weight        An ellipse object of Gaussian weights to apply to
+     *                          the measurement.
+     * @param[in] image         A Masked image instance with int float or double
+     *                          pixels.
+     * @param[in] nSigmaRegion  Maximum radius for pixels to include, in units
+     *                          of sigma
+     */
     template <typename T>
-    static Result measure(
+    static SimpleShapeResult computeMoments(
         afw::geom::ellipses::Ellipse const & weight,
         afw::image::MaskedImage<T> const & image,
         double nSigmaRegion=3.0
@@ -124,25 +175,47 @@ public:
      *    \nu &=& C M^{-1} \eta
      *  @f}
      */
-    static Eigen::Matrix<double,5,5> correctWeightedMoments(
+    static Eigen::Matrix<double, 5, 5> correctWeightedMoments(
         afw::geom::ellipses::Quadrupole const & weight,
         afw::geom::ellipses::Quadrupole & ellipse,
         afw::geom::Point2D & center
     );
 
-private:
-    
-    template <typename PixelT>
-    void _apply(
-        afw::table::SourceRecord & source,
-        afw::image::Exposure<PixelT> const & exposure,
-        afw::geom::Point2D const & center
+    virtual void measure(
+            afw::table::SourceRecord & measRecord,
+            afw::image::Exposure<float> const & exposure
+            ) const;
+
+    virtual void fail(
+        afw::table::SourceRecord & measRecord,
+        lsst::meas::base::MeasurementError * error=NULL
     ) const;
 
-    LSST_MEAS_ALGORITHM_PRIVATE_INTERFACE(SimpleShape);
-
-    afw::table::KeyTuple<afw::table::Centroid> _centroidKeys;
+ private:
+    Control _ctrl;
+    SimpleShapeResultKey _resultKey;
+    lsst::meas::base::SafeCentroidExtractor _centroidExtractor;
 };
+
+/**
+ *  Struct to hold the results of SimpleShape when we don't run it as a plugin.
+ */
+class SimpleShapeResult {
+ public:
+    afw::geom::ellipses::Quadrupole ellipse; ///< Measured second moments.
+    afw::geom::Point2D center; ///< Measured first moments, or the input center if !recentroid
+    Eigen::Matrix<double,5,5> covariance; ///< Matrix of uncertainties; ordered Ixx, Iyy, Ixy, Ix, Iy.
+
+#ifndef SWIG
+    std::bitset<SimpleShape::N_FLAGS> flags;
+#endif
+
+    // Flag getter for Swig which doesn't understand std::bitset
+    bool getFlag(int index) const { return flags[index]; }
+
+    SimpleShapeResult(); ///< Constructor; initializes everything to Nan
+};
+
 
 }}}} // namespace lsst::meas::extensions::simpleShape
 
