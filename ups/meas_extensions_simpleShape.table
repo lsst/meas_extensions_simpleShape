@@ -1,5 +1,12 @@
+setupRequired(scons)
+setupRequired(sconsUtils)
+setupRequired(base)
+setupRequired(numpy)
 setupRequired(afw)
 setupRequired(meas_base)
+setupRequired(utils)
+setupRequired(pex_config)
+setupRequired(pex_exceptions)
 
 # The following is boilerplate for all packages.
 # Pure-Python packages only need the last line.
