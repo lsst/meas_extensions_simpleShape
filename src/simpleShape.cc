@@ -301,7 +301,7 @@ SimpleShapeResult::SimpleShapeResult() : ellipse(std::numeric_limits<lsst::meas:
                              covariance(Eigen::Matrix<double,5,5>::Constant(std::numeric_limits<lsst::meas::base::ErrElement>::quiet_NaN()))
 {}
 
-static boost::array<lsst::meas::base::FlagDefinition, SimpleShape::N_FLAGS> const flagDefs = {{
+static std::array<lsst::meas::base::FlagDefinition, SimpleShape::N_FLAGS> const flagDefs = {{
     {"flag", "general failure flag, set if anything went wrong"}
 }};
 
