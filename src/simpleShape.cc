@@ -21,6 +21,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include <array>
+
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/ellipses/PixelRegion.h"
 #include "lsst/meas/extensions/simpleShape.h"
