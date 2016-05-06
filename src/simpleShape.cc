@@ -315,10 +315,10 @@ SimpleShapeResultKey SimpleShapeResultKey::addFields(
             r._shapeResult = lsst::afw::table::QuadrupoleKey::addFields(schema,
                                                             name, "elliptical Gaussian moments");
             r._centroidResult = lsst::afw::table::Point2DKey::addFields(schema,
-                                                            name, "elliptical Gaussian moments", "pixels");
+                                                            name, "elliptical Gaussian moments", "pixel");
             r._uncertantyResult = lsst::afw::table::CovarianceMatrixKey<double, 5>::addFields(schema,name, 
                                                             std::vector<std::string> ({"Ixx", "Iyy", "Ixy",
-                                                                                      "Ix", "Iy"}), "pixels");
+                                                                                      "Ix", "Iy"}), "pixel");
             r._flagHandler = lsst::meas::base::FlagHandler::addFields(schema,
                                                             name, flagDefs.begin(), flagDefs.end());
             return r;
