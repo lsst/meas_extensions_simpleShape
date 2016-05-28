@@ -1,7 +1,7 @@
 // -*- lsst-c++ -*-
 /*
  * LSST Data Management System
- * Copyright 2008-2013 LSST Corporation.
+ * Copyright 2008-2016  AURA/LSST.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -51,18 +51,18 @@ Span clipSpan(Span const & span, afw::geom::Box2I const & box) {
 }
 
 template <typename Function, typename Iterator>
-void iterateSpan(Function function, Iterator pixIter, Span const & span) {
+void iterateSpan(Function & function, Iterator pixIter, Span const & span) {
     for (
         Span::Iterator pointIter = span.begin(), pointEnd = span.end();
         pointIter != pointEnd;
         ++pointIter, ++pixIter
     ) {
-        boost::unwrap_ref(function)(*pointIter, *pixIter);
+        function(*pointIter, *pixIter);
     }
 }
 
 template <typename Function, typename Image, typename Region>
-void iterateRegion(Function function, Image const & image, Region const & region) {
+void iterateRegion(Function & function, Image const & image, Region const & region) {
     afw::geom::Box2I bbox = image.getBBox(afw::image::PARENT);
     if (bbox.contains(region.getBBox())) {
         // if the box contains the region, there's no need to check each span to make sure it's entirely
@@ -167,7 +167,7 @@ SimpleShapeResult SimpleShape::computeMoments(
     // All the pixel operations take place in the next two lines, when we use the above machinery
     // to accumulate the raw moments in a single pass.
     RawMomentAccumulator functor(weight);
-    iterateRegion(boost::ref(functor), image, region);
+    iterateRegion(functor, image, region);
 
     // Then we convert the raw moments to an ellipse and centroid, and propagate the uncertainty
     // through the covariance matrix.
