@@ -27,7 +27,7 @@ import lsst.meas.base.tests
 from lsst.meas.base.tests import AlgorithmTestCase
 from lsst.meas.extensions.simpleShape import SimpleShapeResultKey
 
-class SimpleShapeMFTestCase(AlgorithmTestCase):
+class SimpleShapeMFTestCase(AlgorithmTestCase, lsst.utils.tests.TestCase):
     def setUp(self):
         self.bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(-20, -30),
                                         lsst.afw.geom.Extent2I(240, 160))
