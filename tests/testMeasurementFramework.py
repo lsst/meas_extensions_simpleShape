@@ -1,6 +1,8 @@
+#!/usr/bin/env python
 #
 # LSST Data Management System
-# See COPYRIGHT file at the top of the source tree.
+#
+# Copyright 2008-2016  AURA/LSST.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -12,14 +14,13 @@
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program. If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
+# the GNU General Public License along with this program.  If not,
+# see <https://www.lsstcorp.org/LegalNotices/>.
 #
-
 import unittest
 
 import lsst.utils.tests
@@ -27,7 +28,9 @@ import lsst.meas.base.tests
 from lsst.meas.base.tests import AlgorithmTestCase
 from lsst.meas.extensions.simpleShape import SimpleShapeResultKey
 
+
 class SimpleShapeMFTestCase(AlgorithmTestCase, lsst.utils.tests.TestCase):
+
     def setUp(self):
         self.bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(-20, -30),
                                         lsst.afw.geom.Extent2I(240, 160))
@@ -36,26 +39,26 @@ class SimpleShapeMFTestCase(AlgorithmTestCase, lsst.utils.tests.TestCase):
                                lsst.afw.geom.ellipses.Quadrupole(8, 9, 3))
 
         self.expectedKeySet = set(['ext_simpleShape_SimpleShape_IxSigma',
-                             'ext_simpleShape_SimpleShape_Ix_Iy_Cov',
-                             'ext_simpleShape_SimpleShape_IxxSigma',
-                             'ext_simpleShape_SimpleShape_Ixx_Ix_Cov',
-                             'ext_simpleShape_SimpleShape_Ixx_Ixy_Cov',
-                             'ext_simpleShape_SimpleShape_Ixx_Iy_Cov',
-                             'ext_simpleShape_SimpleShape_Ixx_Iyy_Cov',
-                             'ext_simpleShape_SimpleShape_IxySigma',
-                             'ext_simpleShape_SimpleShape_Ixy_Ix_Cov',
-                             'ext_simpleShape_SimpleShape_Ixy_Iy_Cov',
-                             'ext_simpleShape_SimpleShape_IySigma',
-                             'ext_simpleShape_SimpleShape_IyySigma',
-                             'ext_simpleShape_SimpleShape_Iyy_Ix_Cov',
-                             'ext_simpleShape_SimpleShape_Iyy_Ixy_Cov',
-                             'ext_simpleShape_SimpleShape_Iyy_Iy_Cov',
-                             'ext_simpleShape_SimpleShape_flag',
-                             'ext_simpleShape_SimpleShape_x',
-                             'ext_simpleShape_SimpleShape_xx',
-                             'ext_simpleShape_SimpleShape_xy',
-                             'ext_simpleShape_SimpleShape_y',
-                             'ext_simpleShape_SimpleShape_yy'])
+                                   'ext_simpleShape_SimpleShape_Ix_Iy_Cov',
+                                   'ext_simpleShape_SimpleShape_IxxSigma',
+                                   'ext_simpleShape_SimpleShape_Ixx_Ix_Cov',
+                                   'ext_simpleShape_SimpleShape_Ixx_Ixy_Cov',
+                                   'ext_simpleShape_SimpleShape_Ixx_Iy_Cov',
+                                   'ext_simpleShape_SimpleShape_Ixx_Iyy_Cov',
+                                   'ext_simpleShape_SimpleShape_IxySigma',
+                                   'ext_simpleShape_SimpleShape_Ixy_Ix_Cov',
+                                   'ext_simpleShape_SimpleShape_Ixy_Iy_Cov',
+                                   'ext_simpleShape_SimpleShape_IySigma',
+                                   'ext_simpleShape_SimpleShape_IyySigma',
+                                   'ext_simpleShape_SimpleShape_Iyy_Ix_Cov',
+                                   'ext_simpleShape_SimpleShape_Iyy_Ixy_Cov',
+                                   'ext_simpleShape_SimpleShape_Iyy_Iy_Cov',
+                                   'ext_simpleShape_SimpleShape_flag',
+                                   'ext_simpleShape_SimpleShape_x',
+                                   'ext_simpleShape_SimpleShape_xx',
+                                   'ext_simpleShape_SimpleShape_xy',
+                                   'ext_simpleShape_SimpleShape_y',
+                                   'ext_simpleShape_SimpleShape_yy'])
 
     def tearDown(self):
         del self.bbox
@@ -83,17 +86,13 @@ class SimpleShapeMFTestCase(AlgorithmTestCase, lsst.utils.tests.TestCase):
         for attr in ("center", "ellipse", "covariance", "getFlag"):
             self.assertTrue(hasattr(result, attr), "Result Object missing {}".format(attr))
 
-def suite():
+class TestMemory(lsst.utils.tests.MemoryTestCase):
+    pass
+
+
+def setup_module(module):
     lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(SimpleShapeMFTestCase)
-    suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-def run(shouldExit=False):
-    lsst.utils.tests.run(suite(), shouldExit)
-
 if __name__ == "__main__":
-    run(True)
-            
+    lsst.utils.tests.init()
+    unittest.main()

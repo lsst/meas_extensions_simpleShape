@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 #
 # LSST Data Management System
-# Copyright 2008-2013 LSST Corporation.
+#
+# Copyright 2008-2016  AURA/LSST.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -18,9 +19,8 @@
 #
 # You should have received a copy of the LSST License Statement and
 # the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
+# see <https://www.lsstcorp.org/LegalNotices/>.
 #
-
 import unittest
 import numpy
 
@@ -30,6 +30,7 @@ import lsst.afw.geom.ellipses as el
 import lsst.afw.image
 from lsst.meas.extensions.simpleShape import SimpleShape
 
+
 class SimpleShapeTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
@@ -37,19 +38,19 @@ class SimpleShapeTestCase(lsst.utils.tests.TestCase):
             el.Quadrupole(25.0, 25.0, 0.0),
             el.Quadrupole(27.0, 22.0, -5.0),
             el.Quadrupole(23.0, 28.0, 2.0),
-            ]
+        ]
         self.centers = [
             lsst.afw.geom.Point2D(0.0, 0.0),
             lsst.afw.geom.Point2D(2.0, 3.0),
             lsst.afw.geom.Point2D(-1.0, 2.5),
-            ]
+        ]
         for ellipseCore in self.ellipseCores:
             ellipseCore.scale(2)
         self.bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(-500, -500), lsst.afw.geom.Point2I(50, 50))
         self.xg, self.yg = numpy.meshgrid(
             numpy.arange(self.bbox.getBeginX(), self.bbox.getEndX(), dtype=float),
             numpy.arange(self.bbox.getBeginY(), self.bbox.getEndY(), dtype=float)
-            )
+        )
 
     def evaluateGaussian(self, ellipse):
         '''
@@ -68,7 +69,7 @@ class SimpleShapeTestCase(lsst.utils.tests.TestCase):
         '''
         dEllipse = el.Ellipse(dEllipseCore, dCenter)
         image = lsst.afw.image.MaskedImageF(self.bbox)
-        image.getImage().getArray()[:,:] = self.evaluateGaussian(dEllipse)
+        image.getImage().getArray()[:, :] = self.evaluateGaussian(dEllipse)
         wEllipse = el.Ellipse(wEllipseCore, wCenter)
         result = SimpleShape.computeMoments(wEllipse, image)
         return result
@@ -76,7 +77,7 @@ class SimpleShapeTestCase(lsst.utils.tests.TestCase):
     def testCorrectWeightedMoments(self):
         '''
         Test that the measured moments can be corrected for the fact that the measurement
-        contains information on the moments of the weight function used to make the 
+        contains information on the moments of the weight function used to make the
         measurement. The results should only contain the objects shape and not the moments
         used to make the measurement. This is a subset of the functionality in testNoNoiseGaussians.
         Because the other test tests a broader scope, it is useful to have this test happen under
@@ -118,19 +119,13 @@ class SimpleShapeTestCase(lsst.utils.tests.TestCase):
                                  numpy.array(center),
                                  rtol=1E-8, atol=1E-15)
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
+class TestMemory(lsst.utils.tests.MemoryTestCase):
+    pass
 
+
+def setup_module(module):
     lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(SimpleShapeTestCase)
-    suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-def run(shouldExit=False):
-    """Run the tests"""
-    lsst.utils.tests.run(suite(), shouldExit)
-
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
