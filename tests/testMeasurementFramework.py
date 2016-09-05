@@ -86,6 +86,7 @@ class SimpleShapeMFTestCase(AlgorithmTestCase, lsst.utils.tests.TestCase):
         for attr in ("center", "ellipse", "covariance", "getFlag"):
             self.assertTrue(hasattr(result, attr), "Result Object missing {}".format(attr))
 
+
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
 
