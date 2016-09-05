@@ -119,6 +119,7 @@ class SimpleShapeTestCase(lsst.utils.tests.TestCase):
                                  numpy.array(center),
                                  rtol=1E-8, atol=1E-15)
 
+
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
 
