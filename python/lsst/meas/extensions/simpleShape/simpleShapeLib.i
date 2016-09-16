@@ -31,7 +31,6 @@ Access to the classes from the meas_extensions_simpleShape library
 %module(package="lsst.meas.extensions.simpleShape", docstring=simpleShape_DOCSTRING) simpleShapeLib
 
 %{
-#include "lsst/pex/logging.h"
 #include "lsst/meas/base.h"
 #include "lsst/afw/math.h"
 #include "lsst/afw/math/FunctionLibrary.h"
