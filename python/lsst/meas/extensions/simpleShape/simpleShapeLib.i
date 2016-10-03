@@ -40,7 +40,7 @@ Access to the classes from the meas_extensions_simpleShape library
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_MEAS_EXT_SIMPLESHAPE_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
 #include "ndarray/swig.h"
-#include "ndarray/swig/eigen.h"
+#include "ndarray/converter/eigen.h"
 %}
 
 %init %{
