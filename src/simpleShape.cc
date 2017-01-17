@@ -23,7 +23,6 @@
 
 #include <array>
 
-#include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/ellipses/PixelRegion.h"
 #include "lsst/meas/extensions/simpleShape.h"
 #include "lsst/afw/math.h"
@@ -232,22 +231,25 @@ MatrixM SimpleShape::correctWeightedMoments(
     Eigen::Matrix2d mMat = ellipse.getMatrix();
     if (wMat.determinant() <= 0.0) {
         throw LSST_EXCEPT(
-            pex::exceptions::RuntimeError,
-            "Weight moments matrix is singular"
+            base::MeasurementError,
+            "Weight moments matrix is singular",
+            FAILURE
         );
     }
     if (mMat.determinant() <= 0.0) {
         throw LSST_EXCEPT(
-            pex::exceptions::RuntimeError,
-            "Measured moments matrix is singular"
+            base::MeasurementError,
+            "Measured moments matrix is singular",
+            FAILURE
         );
     }
     Eigen::Matrix2d mInv = mMat.inverse();
     Eigen::Matrix2d cInv = mInv - wMat.inverse();
     if (cInv.determinant() <= 0.0) {
         throw LSST_EXCEPT(
-            pex::exceptions::RuntimeError,
-            "Corrected moments matrix is singular"
+            base::MeasurementError,
+            "Corrected moments matrix is singular",
+            FAILURE
         );
     }
     Eigen::Matrix2d cMat = cInv.inverse();
