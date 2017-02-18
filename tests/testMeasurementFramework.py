@@ -80,7 +80,7 @@ class SimpleShapeMFTestCase(AlgorithmTestCase, lsst.utils.tests.TestCase):
 
         # check that SimpleShapeResultKey can be created and that it returns a results object
         key = SimpleShapeResultKey(catalog.schema["ext_simpleShape_SimpleShape"])
-        task.run(exposure, catalog)
+        task.run(catalog, exposure)
 
         result = catalog[0].get(key)
         for attr in ("center", "ellipse", "covariance", "getFlag"):
