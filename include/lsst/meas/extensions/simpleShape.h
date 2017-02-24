@@ -92,14 +92,14 @@ class SimpleShapeResultKey : public afw::table::FunctorKey<SimpleShapeResult> {
 
 
 class SimpleShape : public lsst::meas::base::SimpleAlgorithm {
- public:
+public:
+
+    // Structures and routines to manage flaghandler
+    static base::FlagDefinitionList const & getFlagDefinitions();
+    static unsigned int const N_FLAGS = 1;
+    static base::FlagDefinition const FAILURE;
 
     typedef SimpleShapeControl Control;
-
-     enum {
-        FAILURE=lsst::meas::base::FlagHandler::FAILURE,
-        N_FLAGS
-     };
 
     SimpleShape(Control const & ctrl, std::string const & name, afw::table::Schema & schema);
 
