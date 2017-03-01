@@ -55,7 +55,7 @@ PYBIND11_PLUGIN(_simpleShape) {
     }
 
     /* Module level */
-    py::class_<SimpleShape, base::SimpleAlgorithm> clsSimpleShape(mod, "SimpleShape");
+    py::class_<SimpleShape, std::shared_ptr<SimpleShape>, base::SimpleAlgorithm> clsSimpleShape(mod, "SimpleShape");
     py::class_<SimpleShapeControl> clsSimpleShapeControl(mod, "SimpleShapeControl");
     py::class_<SimpleShapeResult> clsSimpleShapeResult(mod, "SimpleShapeResult");
     py::class_<SimpleShapeResultKey> clsSimpleShapeResultKey(mod, "SimpleShapeResultKey");
