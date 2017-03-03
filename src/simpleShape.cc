@@ -28,6 +28,16 @@
 #include "lsst/afw/math.h"
 
 namespace lsst { namespace meas { namespace extensions { namespace simpleShape {
+namespace {
+base::FlagDefinitionList flagDefinitions;
+} // end anonymous
+
+base::FlagDefinition const SimpleShape::FAILURE = flagDefinitions.addFailureFlag();
+
+base::FlagDefinitionList const & SimpleShape::getFlagDefinitions() {
+    return flagDefinitions;
+}
+
 
 /* ---- Machinery for iterating over elliptical regions ----------------------------------------------------
  *
@@ -233,14 +243,14 @@ MatrixM SimpleShape::correctWeightedMoments(
         throw LSST_EXCEPT(
             base::MeasurementError,
             "Weight moments matrix is singular",
-            FAILURE
+            FAILURE.number
         );
     }
     if (mMat.determinant() <= 0.0) {
         throw LSST_EXCEPT(
             base::MeasurementError,
             "Measured moments matrix is singular",
-            FAILURE
+            FAILURE.number
         );
     }
     Eigen::Matrix2d mInv = mMat.inverse();
@@ -249,7 +259,7 @@ MatrixM SimpleShape::correctWeightedMoments(
         throw LSST_EXCEPT(
             base::MeasurementError,
             "Corrected moments matrix is singular",
-            FAILURE
+            FAILURE.number
         );
     }
     Eigen::Matrix2d cMat = cInv.inverse();
@@ -305,9 +315,6 @@ SimpleShapeResult::SimpleShapeResult() : ellipse(std::numeric_limits<lsst::meas:
                              covariance(Eigen::Matrix<double,5,5>::Constant(std::numeric_limits<lsst::meas::base::ErrElement>::quiet_NaN()))
 {}
 
-static std::array<lsst::meas::base::FlagDefinition, SimpleShape::N_FLAGS> const flagDefs = {{
-    {"flag", "general failure flag, set if anything went wrong"}
-}};
 
 SimpleShapeResultKey SimpleShapeResultKey::addFields(
         afw::table::Schema & schema,
@@ -322,7 +329,7 @@ SimpleShapeResultKey SimpleShapeResultKey::addFields(
                                                             std::vector<std::string> ({"Ixx", "Iyy", "Ixy",
                                                                                       "Ix", "Iy"}), "pixel");
             r._flagHandler = lsst::meas::base::FlagHandler::addFields(schema,
-                                                            name, flagDefs.begin(), flagDefs.end());
+                                                            name, SimpleShape::getFlagDefinitions());
             return r;
 }
 
@@ -330,7 +337,7 @@ SimpleShapeResultKey::SimpleShapeResultKey(lsst::afw::table::SubSchema const & s
     _shapeResult(s),
     _centroidResult(s),
     _uncertantyResult(s, std::vector<std::string> ({"Ixx", "Iyy", "Ixy", "Ix", "Iy"})),
-    _flagHandler(s, flagDefs.begin(), flagDefs.end())
+    _flagHandler(s, SimpleShape::getFlagDefinitions())
 {}
 
 SimpleShapeResult SimpleShapeResultKey::get(lsst::afw::table::BaseRecord const & record) const {
@@ -338,7 +345,7 @@ SimpleShapeResult SimpleShapeResultKey::get(lsst::afw::table::BaseRecord const &
     result.ellipse = record.get(_shapeResult);
     result.center = record.get(_centroidResult);
     result.covariance = record.get(_uncertantyResult);
-    for (int n = 0; n < SimpleShape::N_FLAGS; ++n) {
+    for (std::size_t n = 0; n < SimpleShape::N_FLAGS; ++n) {
         result.flags[n] = _flagHandler.getValue(record, n);
     }
     return result;
@@ -348,7 +355,7 @@ void SimpleShapeResultKey::set(afw::table::BaseRecord & record, SimpleShapeResul
     record.set(_shapeResult, value.ellipse);
     record.set(_centroidResult, value.center);
     record.set(_uncertantyResult, value.covariance);
-    for (int n = 0; n < SimpleShape::N_FLAGS; ++n) {
+    for (std::size_t n = 0; n < SimpleShape::N_FLAGS; ++n) {
         _flagHandler.setValue(record, n, value.flags[n]);
     }
 }
