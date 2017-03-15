@@ -1,3 +1,3 @@
 # -*- python -*-
 from lsst.sconsUtils import scripts
-scripts.BasicSConscript.pybind11(['simpleShape'])
+scripts.BasicSConscript.pybind11(['simpleShape'], addUnderscore=False)
