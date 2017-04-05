@@ -1,8 +1,7 @@
-#!/usr/bin/env python
 #
 # LSST Data Management System
 #
-# Copyright 2008-2016  AURA/LSST.
+# Copyright 2008-2017  AURA/LSST.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -22,7 +21,8 @@
 # see <https://www.lsstcorp.org/LegalNotices/>.
 #
 import unittest
-import numpy
+
+import numpy as np
 
 import lsst.utils.tests
 import lsst.afw.geom
@@ -47,9 +47,9 @@ class SimpleShapeTestCase(lsst.utils.tests.TestCase):
         for ellipseCore in self.ellipseCores:
             ellipseCore.scale(2)
         self.bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(-500, -500), lsst.afw.geom.Point2I(50, 50))
-        self.xg, self.yg = numpy.meshgrid(
-            numpy.arange(self.bbox.getBeginX(), self.bbox.getEndX(), dtype=float),
-            numpy.arange(self.bbox.getBeginY(), self.bbox.getEndY(), dtype=float)
+        self.xg, self.yg = np.meshgrid(
+            np.arange(self.bbox.getBeginX(), self.bbox.getEndX(), dtype=float),
+            np.arange(self.bbox.getBeginY(), self.bbox.getEndY(), dtype=float)
         )
 
     def evaluateGaussian(self, ellipse):
@@ -59,7 +59,7 @@ class SimpleShapeTestCase(lsst.utils.tests.TestCase):
         gt = ellipse.getGridTransform()
         xt = gt[gt.XX] * self.xg + gt[gt.XY] * self.yg + gt[gt.X]
         yt = gt[gt.YX] * self.xg + gt[gt.YY] * self.yg + gt[gt.Y]
-        return numpy.exp(-0.5 * (xt**2 + yt**2))
+        return np.exp(-0.5 * (xt**2 + yt**2))
 
     def buildImageAndMoments(self, dEllipseCore, dCenter, wEllipseCore, wCenter):
         '''
@@ -92,12 +92,12 @@ class SimpleShapeTestCase(lsst.utils.tests.TestCase):
                         wEllipse = el.Ellipse(wEllipseCore, wCenter)
                         wArray = self.evaluateGaussian(wEllipse)
                         product = dArray * wArray
-                        i0 = numpy.sum(product)
-                        ix = numpy.sum(product * self.xg) / i0
-                        iy = numpy.sum(product * self.yg) / i0
-                        ixx = numpy.sum(product * (self.xg - ix)**2) / i0
-                        iyy = numpy.sum(product * (self.yg - iy)**2) / i0
-                        ixy = numpy.sum(product * (self.xg - ix) * (self.yg - iy)) / i0
+                        i0 = np.sum(product)
+                        ix = np.sum(product * self.xg) / i0
+                        iy = np.sum(product * self.yg) / i0
+                        ixx = np.sum(product * (self.xg - ix)**2) / i0
+                        iyy = np.sum(product * (self.yg - iy)**2) / i0
+                        ixy = np.sum(product * (self.xg - ix) * (self.yg - iy)) / i0
                         mEllipseCore = el.Quadrupole(ixx, iyy, ixy)
                         mCenter = lsst.afw.geom.Point2D(ix, iy)
                         SimpleShape.correctWeightedMoments(wEllipseCore, mEllipseCore, mCenter)
