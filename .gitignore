@@ -1,3 +1,4 @@
+_build.*
 .sconsign.dblite
 config.log
 .sconf_temp
@@ -11,5 +12,6 @@ doc/xml
 doc/*.tag
 doc/*.inc
 doc/doxygen.conf
+lib/libmeas_extensions_simpleShape.*
 tests/.tests
 version.py
