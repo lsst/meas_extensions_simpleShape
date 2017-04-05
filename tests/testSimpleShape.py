@@ -101,9 +101,9 @@ class SimpleShapeTestCase(lsst.utils.tests.TestCase):
                         mEllipseCore = el.Quadrupole(ixx, iyy, ixy)
                         mCenter = lsst.afw.geom.Point2D(ix, iy)
                         SimpleShape.correctWeightedMoments(wEllipseCore, mEllipseCore, mCenter)
-                        self.assertClose(mEllipseCore.getParameterVector(),
-                                         dEllipseCore.getParameterVector(),
-                                         rtol=1E-8, atol=1E-11)
+                        self.assertFloatsAlmostEqual(mEllipseCore.getParameterVector(),
+                                                     dEllipseCore.getParameterVector(),
+                                                     rtol=1E-8, atol=1E-11)
 
     def testNoNoiseGaussians(self):
         '''
@@ -112,12 +112,12 @@ class SimpleShapeTestCase(lsst.utils.tests.TestCase):
         for ellipseCore in self.ellipseCores:
             for center in self.centers:
                 result = self.buildImageAndMoments(ellipseCore, center, ellipseCore, center)
-                self.assertClose(result.ellipse.getParameterVector(),
-                                 ellipseCore.getParameterVector(),
-                                 rtol=3E-3, atol=1E-15)
-                self.assertClose(numpy.array(result.center),
-                                 numpy.array(center),
-                                 rtol=1E-8, atol=1E-15)
+                self.assertFloatsAlmostEqual(result.ellipse.getParameterVector(),
+                                             ellipseCore.getParameterVector(),
+                                             rtol=3E-3, atol=1E-15)
+                self.assertFloatsAlmostEqual(np.array(result.center),
+                                             np.array(center),
+                                             rtol=1E-8, atol=1E-15)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
