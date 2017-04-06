@@ -1,8 +1,7 @@
-#!/usr/bin/env python
 #
 # LSST Data Management System
 #
-# Copyright 2008-2016  AURA/LSST.
+# Copyright 2008-2017  AURA/LSST.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -93,6 +92,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()
