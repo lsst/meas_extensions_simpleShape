@@ -19,11 +19,10 @@
  * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
-#include <pybind11/pybind11.h>
+#include "pybind11/pybind11.h"
 
 #include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
-#include "ndarray/converter.h"
 
 #include "lsst/meas/extensions/simpleShape.h"
 #include "lsst/pex/config/python.h"
@@ -37,6 +36,7 @@ namespace extensions {
 namespace simpleShape {
 
 namespace {
+
 template <typename T, typename PyClass>
 static void declareMoments(PyClass cls) {
     cls.def_static("computeMoments", (SimpleShapeResult(*)(afw::geom::ellipses::Ellipse const &,
@@ -44,10 +44,16 @@ static void declareMoments(PyClass cls) {
                                              SimpleShape::computeMoments,
                    "weight"_a, "image"_a, "nSigmaRegion"_a = 3.0);
 }
-}
 
-PYBIND11_PLUGIN(_simpleShape) {
-    py::module mod("_simpleShape", "Python wrapper for _simpleShape library");
+}  // <anonymous>
+
+PYBIND11_PLUGIN(simpleShape) {
+    py::module::import("lsst.afw.geom");
+    py::module::import("lsst.afw.image");
+    py::module::import("lsst.afw.table");
+    py::module::import("lsst.meas.base");
+
+    py::module mod("simpleShape");
 
     if (_import_array() < 0) {
         PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
@@ -86,7 +92,8 @@ PYBIND11_PLUGIN(_simpleShape) {
 
     return mod.ptr();
 }
-}
-}
-}
-}  // lsst::meas::extensions::shapeHSM
+
+}  // shapeHSM
+}  // extensions
+}  // meas
+}  // lsst
