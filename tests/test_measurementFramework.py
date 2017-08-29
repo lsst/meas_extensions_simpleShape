@@ -71,7 +71,7 @@ class SimpleShapeMFTestCase(AlgorithmTestCase, lsst.utils.tests.TestCase):
         """
 
         task = self.makeSingleFrameMeasurementTask("ext_simpleShape_SimpleShape")
-        exposure, catalog = self.dataset.realize(10.0, task.schema)
+        exposure, catalog = self.dataset.realize(10.0, task.schema, randomSeed=0)
         # Check the keys are in the schema
         foundKeySet = set(catalog.schema.getNames()) & self.expectedKeySet
         missingKeySet = self.expectedKeySet - foundKeySet
