@@ -21,7 +21,6 @@
  */
 #include "pybind11/pybind11.h"
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/meas/extensions/simpleShape.h"
@@ -54,11 +53,6 @@ PYBIND11_PLUGIN(simpleShape) {
     py::module::import("lsst.meas.base");
 
     py::module mod("simpleShape");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
 
     /* Module level */
     py::class_<SimpleShape, std::shared_ptr<SimpleShape>, base::SimpleAlgorithm> clsSimpleShape(
