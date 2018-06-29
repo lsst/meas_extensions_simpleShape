@@ -5,6 +5,7 @@ config.log
 .cache
 .pytest_cache
 pytest_session.txt
+.coverage
 *.o
 *.os
 *.so
