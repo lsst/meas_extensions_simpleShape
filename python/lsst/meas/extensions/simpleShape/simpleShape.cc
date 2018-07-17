@@ -48,13 +48,11 @@ static void declareMoments(PyClass cls) {
 
 }  // namespace
 
-PYBIND11_PLUGIN(simpleShape) {
+PYBIND11_MODULE(simpleShape, mod) {
     py::module::import("lsst.afw.geom");
     py::module::import("lsst.afw.image");
     py::module::import("lsst.afw.table");
     py::module::import("lsst.meas.base");
-
-    py::module mod("simpleShape");
 
     /* Module level */
     py::class_<SimpleShape, std::shared_ptr<SimpleShape>, base::SimpleAlgorithm> clsSimpleShape(
@@ -85,8 +83,6 @@ PYBIND11_PLUGIN(simpleShape) {
     clsSimpleShapeResult.def("getFlag", &SimpleShapeResult::getFlag);
 
     clsSimpleShapeResultKey.def("get", &SimpleShapeResultKey::get, "record"_a);
-
-    return mod.ptr();
 }
 
 }  // namespace simpleShape
