@@ -39,13 +39,14 @@ namespace {
 
 template <typename T, typename PyClass>
 static void declareMoments(PyClass cls) {
-    cls.def_static("computeMoments", (SimpleShapeResult(*)(afw::geom::ellipses::Ellipse const &,
-                                                           afw::image::MaskedImage<T> const &, double)) &
-                                             SimpleShape::computeMoments,
+    cls.def_static("computeMoments",
+                   (SimpleShapeResult(*)(afw::geom::ellipses::Ellipse const &,
+                                         afw::image::MaskedImage<T> const &, double)) &
+                           SimpleShape::computeMoments,
                    "weight"_a, "image"_a, "nSigmaRegion"_a = 3.0);
 }
 
-}  // <anonymous>
+}  // namespace
 
 PYBIND11_PLUGIN(simpleShape) {
     py::module::import("lsst.afw.geom");
@@ -88,7 +89,7 @@ PYBIND11_PLUGIN(simpleShape) {
     return mod.ptr();
 }
 
-}  // shapeHSM
-}  // extensions
-}  // meas
-}  // lsst
+}  // namespace simpleShape
+}  // namespace extensions
+}  // namespace meas
+}  // namespace lsst
