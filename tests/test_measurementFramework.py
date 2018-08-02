@@ -32,7 +32,7 @@ class SimpleShapeMFTestCase(AlgorithmTestCase, lsst.utils.tests.TestCase):
 
     def setUp(self):
         self.bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(-20, -30),
-                                        lsst.afw.geom.Extent2I(240, 160))
+                                        lsst.afw.geom.Extent2I(240, 160), invert=False)
         self.dataset = lsst.meas.base.tests.TestDataset(self.bbox)
         self.dataset.addSource(100000.0, lsst.afw.geom.Point2D(149.9, 50.3),
                                lsst.afw.geom.ellipses.Quadrupole(8, 9, 3))

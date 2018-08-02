@@ -46,7 +46,8 @@ class SimpleShapeTestCase(lsst.utils.tests.TestCase):
         ]
         for ellipseCore in self.ellipseCores:
             ellipseCore.scale(2)
-        self.bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(-500, -500), lsst.afw.geom.Point2I(50, 50))
+        self.bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(-500, -500), lsst.afw.geom.Point2I(50, 50),
+                                        invert=False)
         self.xg, self.yg = np.meshgrid(
             np.arange(self.bbox.getBeginX(), self.bbox.getEndX(), dtype=float),
             np.arange(self.bbox.getBeginY(), self.bbox.getEndY(), dtype=float)
