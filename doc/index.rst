@@ -9,5 +9,4 @@ meas_extensions_simpleShape documentation preview
 .. toctree::
    :maxdepth: 1
 
-   meas_extensions_simpleShape/index
    lsst.meas.extensions.simpleShape/index
