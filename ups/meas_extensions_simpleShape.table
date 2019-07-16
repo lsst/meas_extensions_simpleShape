@@ -8,6 +8,7 @@ setupRequired(meas_base)
 setupRequired(utils)
 setupRequired(pex_config)
 setupRequired(pex_exceptions)
+setupRequired(geom)
 
 # The following is boilerplate for all packages.
 # Pure-Python packages only need the last line.
