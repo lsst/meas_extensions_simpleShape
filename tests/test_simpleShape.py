@@ -25,7 +25,7 @@ import unittest
 import numpy as np
 
 import lsst.utils.tests
-import lsst.afw.geom
+import lsst.geom
 import lsst.afw.geom.ellipses as el
 import lsst.afw.image
 from lsst.meas.extensions.simpleShape import SimpleShape
@@ -40,13 +40,13 @@ class SimpleShapeTestCase(lsst.utils.tests.TestCase):
             el.Quadrupole(23.0, 28.0, 2.0),
         ]
         self.centers = [
-            lsst.afw.geom.Point2D(0.0, 0.0),
-            lsst.afw.geom.Point2D(2.0, 3.0),
-            lsst.afw.geom.Point2D(-1.0, 2.5),
+            lsst.geom.Point2D(0.0, 0.0),
+            lsst.geom.Point2D(2.0, 3.0),
+            lsst.geom.Point2D(-1.0, 2.5),
         ]
         for ellipseCore in self.ellipseCores:
             ellipseCore.scale(2)
-        self.bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(-500, -500), lsst.afw.geom.Point2I(50, 50))
+        self.bbox = lsst.geom.Box2I(lsst.geom.Point2I(-500, -500), lsst.geom.Point2I(50, 50))
         self.xg, self.yg = np.meshgrid(
             np.arange(self.bbox.getBeginX(), self.bbox.getEndX(), dtype=float),
             np.arange(self.bbox.getBeginY(), self.bbox.getEndY(), dtype=float)
@@ -99,7 +99,7 @@ class SimpleShapeTestCase(lsst.utils.tests.TestCase):
                         iyy = np.sum(product * (self.yg - iy)**2) / i0
                         ixy = np.sum(product * (self.xg - ix) * (self.yg - iy)) / i0
                         mEllipseCore = el.Quadrupole(ixx, iyy, ixy)
-                        mCenter = lsst.afw.geom.Point2D(ix, iy)
+                        mCenter = lsst.geom.Point2D(ix, iy)
                         SimpleShape.correctWeightedMoments(wEllipseCore, mEllipseCore, mCenter)
                         self.assertFloatsAlmostEqual(mEllipseCore.getParameterVector(),
                                                      dEllipseCore.getParameterVector(),

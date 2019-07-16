@@ -22,6 +22,8 @@
 #
 import unittest
 
+import lsst.geom
+import lsst.afw.geom
 import lsst.utils.tests
 import lsst.meas.base.tests
 from lsst.meas.base.tests import AlgorithmTestCase
@@ -31,10 +33,10 @@ from lsst.meas.extensions.simpleShape import SimpleShapeResultKey
 class SimpleShapeMFTestCase(AlgorithmTestCase, lsst.utils.tests.TestCase):
 
     def setUp(self):
-        self.bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(-20, -30),
-                                        lsst.afw.geom.Extent2I(240, 160))
+        self.bbox = lsst.geom.Box2I(lsst.geom.Point2I(-20, -30),
+                                    lsst.geom.Extent2I(240, 160))
         self.dataset = lsst.meas.base.tests.TestDataset(self.bbox)
-        self.dataset.addSource(100000.0, lsst.afw.geom.Point2D(149.9, 50.3),
+        self.dataset.addSource(100000.0, lsst.geom.Point2D(149.9, 50.3),
                                lsst.afw.geom.ellipses.Quadrupole(8, 9, 3))
 
         self.expectedKeySet = set(['ext_simpleShape_SimpleShape_IxErr',

@@ -51,7 +51,7 @@ namespace {
 
 using afw::geom::Span;
 
-Span clipSpan(Span const & span, afw::geom::Box2I const & box) {
+Span clipSpan(Span const & span, geom::Box2I const & box) {
     if (span.getY() < box.getMinY() || span.getY() > box.getMaxY()) return Span();
     return Span(span.getY(),
                 std::min(std::max(span.getMinX(), box.getMinX()), box.getMaxX()),
@@ -72,7 +72,7 @@ void iterateSpan(Function & function, Iterator pixIter, Span const & span) {
 
 template <typename Function, typename Image, typename Region>
 void iterateRegion(Function & function, Image const & image, Region const & region) {
-    afw::geom::Box2I bbox = image.getBBox(afw::image::PARENT);
+    geom::Box2I bbox = image.getBBox(afw::image::PARENT);
     if (bbox.contains(region.getBBox())) {
         // if the box contains the region, there's no need to check each span to make sure it's entirely
         // within the image
@@ -127,9 +127,9 @@ typedef Eigen::Matrix<double,N_M,N_Q> MatrixMQ;
 struct RawMomentAccumulator {
 
     template <typename PixelT>
-    void operator()(afw::geom::Point2I const & pos, PixelT const & pixel) {
-        afw::geom::Extent2D d = afw::geom::Point2D(pos) - _center;
-        afw::geom::Extent2D gtd = _gt(d);
+    void operator()(geom::Point2I const & pos, PixelT const & pixel) {
+        geom::Extent2D d = geom::Point2D(pos) - _center;
+        geom::Extent2D gtd = _gt(d);
         double w = std::exp(-0.5 * (gtd.getX()*gtd.getX() + gtd.getY()*gtd.getY()));
         VectorQ q = VectorQ::Constant(w);
         q[QXX] *= d.getX() * d.getX();
@@ -151,8 +151,8 @@ struct RawMomentAccumulator {
     VectorQ moments;
     MatrixQ covariance;
 private:
-    afw::geom::Point2D _center;
-    afw::geom::LinearTransform _gt;
+    geom::Point2D _center;
+    geom::LinearTransform _gt;
 };
 
 } // anonymous
@@ -194,7 +194,7 @@ SimpleShapeResult SimpleShape::computeMoments(
     result.covariance = dc_dm * mCov.selfadjointView<Eigen::Lower>() * dc_dm.adjoint();
 
     // Finally, we switch back to the native image coordinate system.
-    result.center += afw::geom::Extent2D(weight.getCenter());
+    result.center += geom::Extent2D(weight.getCenter());
 
     return result;
 }
@@ -203,7 +203,7 @@ SimpleShapeResult SimpleShape::computeMoments(
 MatrixMQ SimpleShape::convertRawMoments(
     VectorQ const & q,
     afw::geom::ellipses::Quadrupole & ellipse,
-    afw::geom::Point2D & center
+    geom::Point2D & center
 ) {
     VectorM m = q.segment<N_M>(1) / q[Q0];
     MatrixMQ dm_dq = MatrixMQ::Zero();;
@@ -234,7 +234,7 @@ MatrixMQ SimpleShape::convertRawMoments(
 MatrixM SimpleShape::correctWeightedMoments(
     afw::geom::ellipses::Quadrupole const & weight,
     afw::geom::ellipses::Quadrupole & ellipse,
-    afw::geom::Point2D & center
+    geom::Point2D & center
 ) {
     Eigen::Matrix2d wMat = weight.getMatrix();
     Eigen::Vector2d mVec = center.asEigen();
@@ -389,7 +389,7 @@ void SimpleShape::measure(
     afw::table::SourceRecord & source,
     afw::image::Exposure<float> const & exposure
 ) const {
-    afw::geom::Point2D center = _centroidExtractor(source, _resultKey.getFlagHandler());
+    geom::Point2D center = _centroidExtractor(source, _resultKey.getFlagHandler());
     afw::geom::ellipses::Ellipse weight(afw::geom::ellipses::Axes(_ctrl.sigma), center);
     // set flags so an exception throw produces a flagged source
     SimpleShapeResult result = computeMoments(weight, exposure.getMaskedImage(), _ctrl.nSigmaRegion);
