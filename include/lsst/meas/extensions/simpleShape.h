@@ -26,6 +26,7 @@
 #include <bitset>
 
 #include "lsst/pex/config.h"
+#include "lsst/geom.h"
 #include "lsst/afw/geom/ellipses.h"
 #include "lsst/afw/table.h"
 #include "lsst/afw/image.h"
@@ -150,7 +151,7 @@ public:
     static Eigen::Matrix<double,5,6> convertRawMoments(
         Eigen::Matrix<double,6,1> const & q,
         afw::geom::ellipses::Quadrupole & quadrupole,
-        afw::geom::Point2D & center
+        geom::Point2D & center
     );
 
     /**
@@ -178,7 +179,7 @@ public:
     static Eigen::Matrix<double, 5, 5> correctWeightedMoments(
         afw::geom::ellipses::Quadrupole const & weight,
         afw::geom::ellipses::Quadrupole & ellipse,
-        afw::geom::Point2D & center
+        geom::Point2D & center
     );
 
     virtual void measure(
@@ -203,7 +204,7 @@ public:
 class SimpleShapeResult {
  public:
     afw::geom::ellipses::Quadrupole ellipse; ///< Measured second moments.
-    afw::geom::Point2D center; ///< Measured first moments, or the input center if !recentroid
+    geom::Point2D center; ///< Measured first moments, or the input center if !recentroid
     Eigen::Matrix<double,5,5> covariance; ///< Matrix of uncertainties; ordered Ixx, Iyy, Ixy, Ix, Iy.
 
 #ifndef SWIG
