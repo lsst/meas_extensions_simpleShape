@@ -1,8 +1,5 @@
-setupRequired(scons)
 setupRequired(sconsUtils)
 setupRequired(base)
-setupRequired(numpy)
-setupRequired(pybind11)
 setupRequired(afw)
 setupRequired(meas_base)
 setupRequired(utils)
