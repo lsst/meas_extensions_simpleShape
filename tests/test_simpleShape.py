@@ -114,10 +114,10 @@ class SimpleShapeTestCase(lsst.utils.tests.TestCase):
                 result = self.buildImageAndMoments(ellipseCore, center, ellipseCore, center)
                 self.assertFloatsAlmostEqual(result.ellipse.getParameterVector(),
                                              ellipseCore.getParameterVector(),
-                                             rtol=3E-3, atol=1E-15)
+                                             rtol=3E-3, atol=2E-15)
                 self.assertFloatsAlmostEqual(np.array(result.center),
                                              np.array(center),
-                                             rtol=1E-8, atol=1E-15)
+                                             rtol=1E-8, atol=2E-15)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
