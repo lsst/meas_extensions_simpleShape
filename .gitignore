@@ -19,3 +19,4 @@ doc/doxygen.conf
 lib/libmeas_extensions_simpleShape.*
 tests/.tests
 version.py
+python/*.dist-info/
