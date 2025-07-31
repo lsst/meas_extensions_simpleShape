@@ -55,7 +55,7 @@ PYBIND11_MODULE(simpleShape, mod) {
     py::module::import("lsst.meas.base");
 
     /* Module level */
-    py::class_<SimpleShape, std::shared_ptr<SimpleShape>, base::SimpleAlgorithm> clsSimpleShape(
+    py::classh<SimpleShape, base::SimpleAlgorithm> clsSimpleShape(
             mod, "SimpleShape");
     py::class_<SimpleShapeControl> clsSimpleShapeControl(mod, "SimpleShapeControl");
     py::class_<SimpleShapeResult> clsSimpleShapeResult(mod, "SimpleShapeResult");
